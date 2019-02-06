@@ -1,6 +1,7 @@
 package tools
 
 import "fmt"
+import "strings"
 import "io/ioutil"
 import "gopkg.in/yaml.v2"
 
@@ -9,10 +10,11 @@ type ServiceConfig struct {
     Excludes []string   `yaml:"excludes"`
     UserId int          `yaml:"user_id"`
     GroupId int         `yaml:"group_id"`
+    Image string        `yaml:"image"`
 }
 
 type OsmosisConfig struct {
-    Services map[string]ServiceConfig `yaml:"syncs"`
+    Syncs map[string]ServiceConfig `yaml:"syncs"`
 }
 
 func (c *OsmosisConfig) ParseConfig(filePath string) (err error) {
@@ -23,7 +25,11 @@ func (c *OsmosisConfig) ParseConfig(filePath string) (err error) {
 
     err = yaml.Unmarshal(yamlfile, c)
     if err != nil {
-        return fmt.Errorf("Error parsing %s, format is invalid.", filePath)
+        if yerr, ok := err.(*yaml.TypeError); ok {
+            return fmt.Errorf("Format of %s is invalid for the following reasons:\n  - %s", filePath, strings.Join(yerr.Errors, "\n  - "))
+        } else {
+            return fmt.Errorf("Format of %s is invalid.", filePath)
+        }
     }
 
     return nil

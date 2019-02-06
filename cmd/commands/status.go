@@ -1,7 +1,19 @@
 package commands
 
-import "fmt"
+import "team-git.sancare.fr/dev/osmosis/cmd/tools"
 
-func Status() {
-    fmt.Println("status")
+func Status(projectName string, verbose bool) (err error) {
+    err = tools.DockerConnect(verbose)
+    if err != nil {
+        return err
+    }
+
+    instances, err = tools.DockerStatus(projectName, verbose)
+    if err != nil {
+        return err
+    }
+
+    // TODO check running instances of unison, and check if they are OK
+
+    return nil
 }

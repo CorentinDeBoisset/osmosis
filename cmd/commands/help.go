@@ -21,16 +21,11 @@ Usage:
   osmosis <command> [<args>]
 
 Options:
-  -f, --file FILE
-  -H, --host HOST
-
-  --tls                       Use TLS; implied by --tlsverify
-  --tlscacert CA_PATH         Trust certs signed only by this CA
-  --tlscert CLIENT_CERT_PATH  Path to TLS certificate file
-  --tlskey TLS_KEY_PATH       Path to TLS key file
-  --tlsverify                 Use TLS and verify the remote
-  --skip-hostname-check       Don't check the daemon's hostname against the
-                              name specified in the client certificate
+  -f, --file FILE           Specify an alternate osmosis file
+                            (default: osmosis.yml)
+  -p, --project-name NAME   Specify an alternate project name
+                            (default: directory name)
+  --verbose                 Show more output
 `)
 
     printCommandList()

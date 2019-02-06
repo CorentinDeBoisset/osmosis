@@ -2,6 +2,7 @@ GOCMD = go
 GOBUILD = $(GOCMD) build
 GOCLEAN = $(GOCMD) clean
 GOTEST = $(GOCMD) test
+GOMOD = $(GOCMD) mod
 GOGET = $(GOCMD) get
 
 BIN_DIR = bin
@@ -19,10 +20,11 @@ test:
 
 clean:
 	$(GOCLEAN)
+	$(GOMOD) tidy
 	rm -f $(BIN_DIR)/$(BINARY_NAME)
 
 get:
-	$(GOGET)
+	$(GOMOD) download
 
 upgrade:
 	$(GOGET) -u

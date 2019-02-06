@@ -10,23 +10,13 @@ func main() {
     var CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ContinueOnError)
     var (
         file string
-        host string
-        tls bool
-        tlscacert string
-        tlscert string
-        tlskey string
-        tlsverify bool
-        skipHostnameCheck bool
+        projectName string
+        verbose bool
     )
 
     CommandLine.StringVarP(&file, "file", "f", "osmosis.yml", "")
-    CommandLine.StringVarP(&host, "host", "H", "/var/run/docker.sock", "")
-    CommandLine.BoolVar(&tls, "tls", false, "")
-    CommandLine.StringVar(&tlscacert, "tlscacert", "", "")
-    CommandLine.StringVar(&tlscert, "tlscert", "", "")
-    CommandLine.StringVar(&tlskey, "tlskey", "", "")
-    CommandLine.BoolVar(&tlsverify, "tlsverify", false, "")
-    CommandLine.BoolVar(&skipHostnameCheck, "skip-hostname-check", false, "")
+    CommandLine.StringVarP(&projectName, "project-name", "p", "", "")
+    CommandLine.BoolVar(&verbose, "verbose", false, "")
 
     var err = CommandLine.Parse(os.Args[1:])
     if (err != nil) {
@@ -45,16 +35,20 @@ func main() {
     if (len(args) == 1) {
         switch args[0] {
         case "start":
-            commands.Start()
+            err = commands.Start(projectName, verbose)
         case "stop":
-            commands.Stop()
+            err = commands.Stop(projectName, verbose)
         case "status":
-            commands.Status()
+            err = commands.Status(projectName, verbose)
         case "restart":
-            commands.Stop()
-            commands.Start()
+            err = commands.Stop(projectName, verbose)
+            if err != nil {
+                fmt.Printf("Error: %s\n\n", err);
+                os.Exit(1)
+            }
+            err = commands.Start(projectName, verbose)
         case "clean":
-            commands.Clean()
+            err = commands.Clean(projectName, verbose)
         case "help":
             commands.Help()
         default:
@@ -63,5 +57,9 @@ func main() {
         }
     } else {
         commands.Help()
+    }
+    if err != nil {
+        fmt.Printf("Error: %s\n\n", err);
+        os.Exit(1)
     }
 }
