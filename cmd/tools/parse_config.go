@@ -5,7 +5,7 @@ import "strings"
 import "io/ioutil"
 import "gopkg.in/yaml.v2"
 
-type ServiceConfig struct {
+type OsmosisServiceConfig struct {
     Src string          `yaml:"src"`
     Excludes []string   `yaml:"excludes"`
     UserId int          `yaml:"user_id"`
@@ -14,7 +14,7 @@ type ServiceConfig struct {
 }
 
 type OsmosisConfig struct {
-    Syncs map[string]ServiceConfig `yaml:"syncs"`
+    Syncs map[string]OsmosisServiceConfig `yaml:"syncs"`
 }
 
 func (c *OsmosisConfig) ParseConfig(filePath string) (err error) {
@@ -30,6 +30,17 @@ func (c *OsmosisConfig) ParseConfig(filePath string) (err error) {
         } else {
             return fmt.Errorf("Format of %s is invalid.", filePath)
         }
+    }
+
+    // Set default values for configuration
+    for serviceName, serviceConf := range c.Syncs {
+        if serviceConf.Image == "" {
+            serviceConf.Image = "registry.sancare.fr/base_images/unison:1.0"
+        }
+        if serviceConf.Src == "" {
+            serviceConf.Src = "."
+        }
+        c.Syncs[serviceName] = serviceConf
     }
 
     return nil

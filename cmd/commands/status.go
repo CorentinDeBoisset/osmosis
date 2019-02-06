@@ -8,7 +8,7 @@ func Status(projectName string, verbose bool) (err error) {
         return err
     }
 
-    instances, err = tools.DockerStatus(projectName, verbose)
+    instances, err := tools.GetDockerInstances(verbose)
     if err != nil {
         return err
     }

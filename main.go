@@ -5,6 +5,8 @@ import "os"
 import "github.com/spf13/pflag"
 import "team-git.sancare.fr/dev/osmosis/cmd/commands"
 import "team-git.sancare.fr/dev/osmosis/cmd/tools"
+import "path/filepath"
+
 
 func main() {
     var CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ContinueOnError)
@@ -32,10 +34,28 @@ func main() {
         os.Exit(1)
     }
 
+    if projectName == "" {
+        fullPath, err := filepath.Abs(file)
+        if err != nil {
+            fmt.Printf("Could not determine %s absolute directory.\n\n", file)
+            os.Exit(1)
+        }
+        projectName = filepath.Base(filepath.Dir(fullPath))
+    }
+
     if (len(args) == 1) {
         switch args[0] {
         case "start":
-            err = commands.Start(projectName, verbose)
+            for serviceName, serviceConfig := range osmosisConf.Syncs {
+                fullName := projectName+"_"+serviceName
+                fmt.Printf("Starting service %s... ", fullName)
+                err = commands.Start(fullName, serviceConfig, verbose)
+                if err != nil {
+                    fmt.Printf("\nError: %s\n\n", err)
+                    os.Exit(1)
+                }
+                fmt.Printf("Done\n")
+            }
         case "stop":
             err = commands.Stop(projectName, verbose)
         case "status":
@@ -46,7 +66,7 @@ func main() {
                 fmt.Printf("Error: %s\n\n", err);
                 os.Exit(1)
             }
-            err = commands.Start(projectName, verbose)
+            // err = commands.Start(projectName, verbose)
         case "clean":
             err = commands.Clean(projectName, verbose)
         case "help":
