@@ -5,14 +5,13 @@ GOTEST = $(GOCMD) test
 GOGET = $(GOCMD) get
 
 BIN_DIR = bin
-CMD_DIR = commands
 BINARY_NAME = osmosis
 
 .PHONY: all deps test clean
 
 all: $(BIN_DIR)/$(BINARY_NAME)
 
-$(BIN_DIR)/$(BINARY_NAME): main.go $(wildcard $(CMD_DIR)/*.go)
+$(BIN_DIR)/$(BINARY_NAME): main.go $(wildcard cmd/*.go) $(wildcard cmd/**/*.go)
 	$(GOBUILD) -v -o $@
 
 test:
