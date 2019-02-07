@@ -13,11 +13,11 @@ type OsmosisServiceConfig struct {
     Image string        `yaml:"image"`
 }
 
-type OsmosisConfig struct {
+type OsmosisFullConfig struct {
     Syncs map[string]OsmosisServiceConfig `yaml:"syncs"`
 }
 
-func (c *OsmosisConfig) ParseConfig(filePath string) (err error) {
+func (c *OsmosisFullConfig) ParseConfig(filePath string) (err error) {
     yamlfile, err := ioutil.ReadFile(filePath)
     if err != nil {
         return fmt.Errorf("File %s does not exist.", filePath)
@@ -35,7 +35,7 @@ func (c *OsmosisConfig) ParseConfig(filePath string) (err error) {
     // Set default values for configuration
     for serviceName, serviceConf := range c.Syncs {
         if serviceConf.Image == "" {
-            serviceConf.Image = "registry.sancare.fr/base_images/unison:1.0"
+            serviceConf.Image = "coenern/osmosis:alpha"
         }
         if serviceConf.Src == "" {
             serviceConf.Src = "."

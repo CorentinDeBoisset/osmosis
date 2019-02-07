@@ -27,7 +27,7 @@ func main() {
     }
     var args = CommandLine.Args()
 
-    var osmosisConf tools.OsmosisConfig
+    var osmosisConf tools.OsmosisFullConfig
     err = osmosisConf.ParseConfig(file)
     if err != nil {
         fmt.Println(err, "\n")
@@ -59,7 +59,7 @@ func main() {
         case "stop":
             err = commands.Stop(projectName, verbose)
         case "status":
-            err = commands.Status(projectName, verbose)
+            err = commands.Status(projectName, osmosisConf, verbose)
         case "restart":
             err = commands.Stop(projectName, verbose)
             if err != nil {

@@ -12,8 +12,10 @@ import "github.com/docker/docker/api/types/network"
 
 type OsmosisDockerInstance struct {
     Id string
+    Image string
     Name string
     Port int
+    Status string
 }
 
 var cli *client.Client
@@ -32,12 +34,33 @@ func DockerConnect(verbose bool) (err error) {
     return nil
 }
 
-func GetDockerInstances(verbose bool) (instances []OsmosisDockerInstance, err error){
+func getContainerInfo(containerId string) (status string, listeningPort int, err error) {
+    expandedInfo, err := cli.ContainerInspect(context.Background(), containerId)
+    if err != nil {
+        return "", -1, fmt.Errorf("Could not check status of container %s.", containerId)
+    }
+
+    if len(expandedInfo.NetworkSettings.NetworkSettingsBase.Ports) == 1 {
+        // We have to iterate over PortBindings,
+        // as we don't know what is the port in the container (it serves as key for the map)
+        for _, portBindingList := range expandedInfo.NetworkSettings.NetworkSettingsBase.Ports {
+            for _, portBinding := range portBindingList {
+                listeningPort, err = strconv.Atoi(portBinding.HostPort)
+                if err != nil {
+                    return "", -1, fmt.Errorf("Could not read the port on which container %s is listening.", containerId)
+                }
+                return expandedInfo.State.Status, listeningPort, nil
+            }
+        }
+    }
+
+    return expandedInfo.State.Status, -1, nil
+}
+
+func GetDockerInstance(serviceName string, verbose bool) (instance *OsmosisDockerInstance, err error){
     if cli == nil {
         return nil, errors.New("Docker client is not initialized.")
     }
-
-    instances = make([]OsmosisDockerInstance, 0)
 
     existingInstances, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
     if err != nil {
@@ -45,12 +68,24 @@ func GetDockerInstances(verbose bool) (instances []OsmosisDockerInstance, err er
     }
 
     for _, existingInstance := range existingInstances {
-        if existingInstance.Image == "registry.sancare.fr/base_images/unison:1.0" && len(existingInstance.Names) > 0 {
-            instances = append(instances, OsmosisDockerInstance{Id: existingInstance.ID, Name: existingInstance.Names[0], Port: -1})
+        if len(existingInstance.Names) > 0 && existingInstance.Names[0] == "/"+serviceName {
+            status, portNb, err := getContainerInfo(existingInstance.ID)
+            if err != nil {
+                return nil, err
+            }
+
+            instance = &OsmosisDockerInstance{
+                Id: existingInstance.ID,
+                Image: existingInstance.Image,
+                Name: existingInstance.Names[0],
+                Port: portNb,
+                Status: status,
+            }
+            return instance, nil
         }
     }
 
-    return instances, nil
+    return nil, nil
 }
 
 func DockerContainerStart(serviceName string, config OsmosisServiceConfig, verbose bool) (instance *OsmosisDockerInstance, err error) {
@@ -58,43 +93,38 @@ func DockerContainerStart(serviceName string, config OsmosisServiceConfig, verbo
         return nil, errors.New("Docker client is not initialized.")
     }
 
-    existingInstances, err := GetDockerInstances(verbose)
+    instance, err = GetDockerInstance(serviceName, verbose)
     if err != nil {
         return nil, err
     }
 
     ctx := context.Background()
 
-    if len(existingInstances) > 0 {
-        for _, existingInstance := range existingInstances {
-            if existingInstance.Name == "/"+serviceName {
-                // We first inspect the container
-                expandedInfo, err := cli.ContainerInspect(ctx, existingInstance.Id)
-                if err != nil {
-                    return nil, fmt.Errorf("Could not check status of container %s.", existingInstance.Id)
-                }
-
-                // If it is running or restarting, no problem
-                if !expandedInfo.State.Running && !expandedInfo.State.Restarting {
-                    if expandedInfo.State.Paused {
-                        // If it was paused, we resume it
-                        err = cli.ContainerUnpause(ctx, existingInstance.Id)
-                        if err != nil {
-                            return nil, fmt.Errorf("Container %s is paused and could not be unpaused.", existingInstance.Id)
-                        }
-                    } else {
-                        // In other cases, we start it
-                        err = cli.ContainerStart(ctx, existingInstance.Id, types.ContainerStartOptions{})
-                        if err != nil {
-                            return nil, fmt.Errorf("Container %s could not be started.", existingInstance.Id)
-                        }
-                    }
-                }
-                err = cli.ContainerStart(ctx, existingInstance.Id, types.ContainerStartOptions{})
-
-                return &existingInstance, nil
-            }
+    if instance != nil {
+        if instance.Image != config.Image {
+            return nil, fmt.Errorf("There is already a container named %s, but it is based on the image \"%s\".\nRun this command to remove any old containers:\n\n  osmosis clean", serviceName, instance.Image)
         }
+
+        // If it is running or restarting, no problem
+        if instance.Status != "running" && instance.Status != "restarting" {
+            if instance.Status == "paused" {
+                // If it was paused, we resume it
+                err = cli.ContainerUnpause(ctx, instance.Id)
+                if err != nil {
+                    return nil, fmt.Errorf("Container %s is paused and could not be unpaused.", instance.Id)
+                }
+            } else {
+                // In other cases, we start it
+                err = cli.ContainerStart(ctx, instance.Id, types.ContainerStartOptions{})
+                if err != nil {
+                    return nil, fmt.Errorf("Container %s could not be started.", instance.Id)
+                }
+            }
+        } else if instance.Port == -1 {
+            return nil, fmt.Errorf("Container %s is running but not listening on any port.", instance.Id)
+        }
+
+        return instance, nil
     }
 
     // The container does not exist, we create and start it
@@ -115,22 +145,20 @@ func DockerContainerStart(serviceName string, config OsmosisServiceConfig, verbo
         return nil, fmt.Errorf("Container %s was created but could not be started.", serviceName)
     }
 
-    runningContainer, err := cli.ContainerInspect(ctx, createdContainer.ID)
+    status, portNb, err := getContainerInfo(createdContainer.ID)
+    if err != nil {
+        return nil, err
+    }
+    if status != "running" || portNb == -1 {
+        return nil, fmt.Errorf("Container %s was created but it could not be used.", serviceName)
+    }
 
-    instance = &OsmosisDockerInstance{Id: createdContainer.ID, Name: serviceName, Port: -1}
-    if len(runningContainer.NetworkSettings.NetworkSettingsBase.Ports) == 1 {
-        // We have to iterate over PortBindings,
-        // as we don't know what is the port in the container (it serves as key for the map)
-        for _, portBindingList := range runningContainer.NetworkSettings.NetworkSettingsBase.Ports {
-            for _, portBinding := range portBindingList {
-                instance.Port, err = strconv.Atoi(portBinding.HostPort)
-                if err != nil {
-                    return nil, fmt.Errorf("Could not get on which port number, the container %s is listening to.", serviceName)
-                }
-            }
-        }
-    } else {
-        return nil, fmt.Errorf("Container %s is not listening on only one port", serviceName)
+    instance = &OsmosisDockerInstance{
+        Id: createdContainer.ID,
+        Image: config.Image,
+        Name: serviceName,
+        Port: portNb,
+        Status: status,
     }
 
     return instance, nil
