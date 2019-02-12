@@ -1,9 +1,11 @@
 package tools
 
-import "fmt"
-import "strings"
-import "io/ioutil"
-import "gopkg.in/yaml.v2"
+import (
+    "fmt"
+    "strings"
+    "io/ioutil"
+    "gopkg.in/yaml.v2"
+)
 
 type OsmosisServiceConfig struct {
     Src string          `yaml:"src"`

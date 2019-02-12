@@ -1,11 +1,16 @@
 package main
 
-import "fmt"
-import "os"
-import "github.com/spf13/pflag"
-import "team-git.sancare.fr/dev/osmosis/cmd/commands"
-import "team-git.sancare.fr/dev/osmosis/cmd/tools"
-import "path/filepath"
+import (
+    "fmt"
+    "os"
+    "github.com/spf13/pflag"
+    "path/filepath"
+)
+
+import (
+    "team-git.sancare.fr/dev/osmosis/cmd/commands"
+    "team-git.sancare.fr/dev/osmosis/cmd/tools"
+)
 
 
 func main() {

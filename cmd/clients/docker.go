@@ -1,13 +1,17 @@
-package tools
+package clients
 
-import "fmt"
-import "errors"
-import "context"
-import "strconv"
-import "github.com/docker/docker/client"
-import "github.com/docker/docker/api/types"
-import "github.com/docker/docker/api/types/container"
-import "github.com/docker/docker/api/types/network"
+import (
+    "fmt"
+    "errors"
+    "context"
+    "strconv"
+    "github.com/docker/docker/client"
+    "github.com/docker/docker/api/types"
+    "github.com/docker/docker/api/types/container"
+    "github.com/docker/docker/api/types/network"
+)
+
+import "team-git.sancare.fr/dev/osmosis/cmd/tools"
 
 
 type OsmosisDockerInstance struct {
@@ -88,7 +92,7 @@ func GetDockerInstance(serviceName string, verbose bool) (instance *OsmosisDocke
     return nil, nil
 }
 
-func DockerContainerStart(serviceName string, config OsmosisServiceConfig, verbose bool) (instance *OsmosisDockerInstance, err error) {
+func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig, verbose bool) (instance *OsmosisDockerInstance, err error) {
     if cli == nil {
         return nil, errors.New("Docker client is not initialized.")
     }
@@ -128,6 +132,7 @@ func DockerContainerStart(serviceName string, config OsmosisServiceConfig, verbo
     }
 
     // The container does not exist, we create and start it
+    // TODO setup environment
     containerConfig := container.Config{Image: config.Image, Hostname: serviceName}
     hostConfig := container.HostConfig{PublishAllPorts: true}
     networkConfig := network.NetworkingConfig{}
