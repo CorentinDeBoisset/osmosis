@@ -29,14 +29,14 @@ func Status(projectName string, config tools.OsmosisFullConfig, verbose bool) (e
         }
         unisonProcess := clients.GetUnisonInstance(serviceName)
         if dockerInstance.Status == "running" {
-            if unisonProcess.Pid == -1 {
+            if unisonProcess.Pid != -1 {
                 if unisonProcess.Running {
                     fmt.Fprintln(writer, serviceName+"\t"+"running")
                 } else {
                     fmt.Fprintln(writer, serviceName+"\t"+"dead")
                 }
             } else {
-                fmt.Fprintln(writer, serviceName+"\t"+"error")
+                fmt.Fprintln(writer, serviceName+"\t"+"error (container is running but not unison)")
             }
         } else {
             fmt.Fprintln(writer, serviceName+"\t"+"stopped")

@@ -53,16 +53,25 @@ func main() {
         case "start":
             for serviceName, serviceConfig := range osmosisConf.Syncs {
                 fullName := projectName+"_"+serviceName
-                fmt.Printf("Starting service %s... ", fullName)
+                fmt.Printf("Starting service %s... ", serviceName)
                 err = commands.Start(fullName, serviceConfig, verbose)
                 if err != nil {
                     fmt.Printf("\nError: %s\n\n", err)
                     os.Exit(1)
                 }
-                fmt.Printf("Done\n")
+                fmt.Println("Done")
             }
         case "stop":
-            err = commands.Stop(projectName, verbose)
+            for serviceName, _ := range osmosisConf.Syncs {
+                fullName := projectName+"_"+serviceName
+                fmt.Printf("Stopping service %s...", serviceName)
+                err = commands.Stop(fullName, verbose)
+                if err != nil {
+                    fmt.Printf("\nError: %s\n\n", err)
+                    os.Exit(1)
+                }
+                fmt.Println("Done")
+            }
         case "status":
             err = commands.Status(projectName, osmosisConf, verbose)
         case "restart":
