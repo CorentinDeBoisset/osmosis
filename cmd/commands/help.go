@@ -5,7 +5,7 @@ import "fmt"
 func printCommandList() {
     fmt.Printf(`Commands:
   start         Create and start sync services
-  ps            List sync services
+  status        List sync services
   stop          Stop services
   restart       Restart services
   clean         Remove all cache and volumes related to a service

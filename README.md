@@ -18,8 +18,6 @@ Package to keep folders synchronised between a docker container and its host.
 
 # TODO:
 
-* Start command:
-    * check & start container (todo: other port, and inject SRC, EXCLUSIONS, UID, GID)
 * Restart command:
     * stop command
     * start command

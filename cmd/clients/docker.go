@@ -5,6 +5,7 @@ import (
     "errors"
     "context"
     "strconv"
+    "strings"
     dockerClient "github.com/docker/docker/client"
     "github.com/docker/docker/api/types"
     "github.com/docker/docker/api/types/container"
@@ -148,7 +149,14 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
     containerConfig := container.Config{
         Image: config.Image,
         Hostname: serviceName,
-        Volumes: map[string]struct{}{serviceName: struct{}{}},
+        Volumes: map[string]struct{}{
+            serviceName: struct{}{},
+        },
+        Env: []string{
+            fmt.Sprintf("OWNER_UID=%s", config.UserId),
+            fmt.Sprintf("OWNER_GID=%s", config.GroupId),
+            fmt.Sprintf("IGNORED_DIRS=%s", strings.Join(config.Excludes, ":")),
+        },
     }
     hostConfig := container.HostConfig{PublishAllPorts: true}
     networkConfig := network.NetworkingConfig{}

@@ -1,19 +1,22 @@
 package tools
 
 import (
+    "errors"
     "fmt"
     "os"
     "io/ioutil"
     "path/filepath"
     "strings"
+    "strconv"
+    "os/user"
     "gopkg.in/yaml.v2"
 )
 
 type OsmosisServiceConfig struct {
     Src string          `yaml:"src"`
     Excludes []string   `yaml:"excludes"`
-    UserId int          `yaml:"user_id"`
-    GroupId int         `yaml:"group_id"`
+    UserId string       `yaml:"user_id"`
+    GroupId string      `yaml:"group_id"`
     Image string        `yaml:"image"`
 }
 
@@ -36,6 +39,11 @@ func (c *OsmosisFullConfig) ParseConfig(configPath string) (err error) {
         }
     }
 
+    currentUser, err := user.Current()
+    if err != nil {
+        return errors.New("Could not read current user properties")
+    }
+
     // Set default values for configuration
     for serviceName, serviceConf := range c.Syncs {
         if serviceConf.Image == "" {
@@ -44,6 +52,18 @@ func (c *OsmosisFullConfig) ParseConfig(configPath string) (err error) {
         if serviceConf.Src == "" {
             serviceConf.Src = "."
         }
+
+        if serviceConf.UserId == "" {
+            serviceConf.UserId = currentUser.Uid
+        } else if _, err := strconv.Atoi(serviceConf.UserId); err != nil {
+            return fmt.Errorf("%s is not valid user UID", serviceConf.UserId)
+        }
+        if serviceConf.GroupId == "" {
+            serviceConf.GroupId = currentUser.Gid
+        } else if _, err := strconv.Atoi(serviceConf.GroupId); err != nil {
+            return fmt.Errorf("%s is not valid user GID", serviceConf.GroupId)
+        }
+
         if !filepath.IsAbs(serviceConf.Src) {
             serviceConf.Src, err = filepath.Abs(filepath.Dir(configPath) + "/" + serviceConf.Src)
             if err != nil {
