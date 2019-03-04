@@ -5,10 +5,12 @@ import (
     "errors"
     "context"
     "strconv"
-    "github.com/docker/docker/client"
+    dockerClient "github.com/docker/docker/client"
     "github.com/docker/docker/api/types"
     "github.com/docker/docker/api/types/container"
     "github.com/docker/docker/api/types/network"
+    "github.com/docker/docker/api/types/volume"
+    "github.com/docker/docker/api/types/filters"
 )
 
 import "team-git.sancare.fr/dev/osmosis/cmd/tools"
@@ -22,10 +24,10 @@ type OsmosisDockerInstance struct {
     Status string
 }
 
-var cli *client.Client
+var cli *dockerClient.Client
 
 func DockerConnect(verbose bool) (err error) {
-    cli, err = client.NewClientWithOpts(client.FromEnv)
+    cli, err = dockerClient.NewClientWithOpts(dockerClient.FromEnv)
     if err != nil {
         return err
     }
@@ -123,6 +125,15 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
                 if err != nil {
                     return nil, fmt.Errorf("Container %s could not be started.", instance.Id)
                 }
+                status, portNb, err := getContainerInfo(instance.Id)
+                if err != nil {
+                    return nil, fmt.Errorf("Container %s could not be inspected.", instance.Id)
+                }
+                if status != "running" || portNb == -1 {
+                    return nil, fmt.Errorf("Container %s was started but it could not be used.", serviceName)
+                }
+                instance.Port = portNb
+                instance.Status = status
             }
         } else if instance.Port == -1 {
             return nil, fmt.Errorf("Container %s is running but not listening on any port.", instance.Id)
@@ -133,7 +144,12 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
 
     // The container does not exist, we create and start it
     // TODO setup environment
-    containerConfig := container.Config{Image: config.Image, Hostname: serviceName}
+
+    containerConfig := container.Config{
+        Image: config.Image,
+        Hostname: serviceName,
+        Volumes: map[string]struct{}{serviceName: struct{}{}},
+    }
     hostConfig := container.HostConfig{PublishAllPorts: true}
     networkConfig := network.NetworkingConfig{}
     createdContainer, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, &networkConfig, serviceName)
@@ -169,9 +185,22 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
     return instance, nil
 }
 
-func DockerContainerStop() (err error) {
+func DockerContainerStop(serviceName string, verbose bool) (err error) {
     if cli == nil {
         return errors.New("Docker client is not initialized.")
+    }
+
+    instance, err := GetDockerInstance(serviceName, verbose)
+    if err != nil {
+        return err
+    }
+    if instance == nil {
+        return nil
+    }
+
+    err = cli.ContainerStop(context.Background(), instance.Id, nil)
+    if err != nil {
+        return fmt.Errorf("Container %s could not be stopped", instance.Id)
     }
 
     return nil
@@ -185,26 +214,70 @@ func DockerContainerRemove() (err error) {
     return nil
 }
 
-func DockerVolumeCreate() (err error) {
+func DockerVolumeCreate(serviceName string, verbose bool) (err error) {
     if cli == nil {
         return errors.New("Docker client is not initialized.")
+    }
+
+    // First, check if the volume already exists
+    volumeExists, err := DockerVolumeStatus(serviceName, verbose)
+    if err != nil {
+        return err
+    }
+    if volumeExists {
+        return nil
+    }
+
+    // If it does not exist, create it
+    body := volume.VolumeCreateBody{
+        Driver: "local",
+        DriverOpts: nil,
+        Labels: nil,
+        Name: serviceName,
+    }
+
+    if _, err = cli.VolumeCreate(context.Background(), body); err != nil {
+        return fmt.Errorf("Could not create volume %s.", serviceName)
     }
 
     return nil
 }
 
-func DockerVolumeRemove() (err error) {
+func DockerVolumeRemove(serviceName string, verbose bool) (err error) {
     if cli == nil {
         return errors.New("Docker client is not initialized.")
+    }
+
+    // First, check if the volume already exists
+    volumeExists, err := DockerVolumeStatus(serviceName, verbose)
+    if err != nil {
+        return err
+    }
+    if volumeExists {
+        if err = cli.VolumeRemove(context.Background(), serviceName, false); err != nil {
+            return fmt.Errorf("Could not remove docker volume %s.", serviceName)
+        }
+        return nil
     }
 
     return nil
 }
 
-func DockerVolumeStatus() (err error) {
+func DockerVolumeStatus(serviceName string, verbose bool) (volumeExists bool, err error) {
     if cli == nil {
-        return errors.New("Docker client is not initialized.")
+        return false, errors.New("Docker client is not initialized.")
     }
 
-    return nil
+    volumeList, err := cli.VolumeList(context.Background(), filters.Args{})
+    if err != nil {
+        return false, errors.New("Could not read docker volume list")
+    }
+
+    for _, volumeInstance := range volumeList.Volumes {
+        if volumeInstance.Name == serviceName {
+            return true, nil
+        }
+    }
+
+    return false, nil
 }

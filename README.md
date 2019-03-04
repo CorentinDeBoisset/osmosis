@@ -18,14 +18,8 @@ Package to keep folders synchronised between a docker container and its host.
 
 # TODO:
 
-* Status command:
-    * List containers with correct image (todo: change the image)
-    * List unisons on associated ports
-    * Return couples and if they are OK or not
 * Start command:
-    * check & create volume
     * check & start container (todo: other port, and inject SRC, EXCLUSIONS, UID, GID)
-* Stop command: stop container, and remove pid file
 * Restart command:
     * stop command
     * start command

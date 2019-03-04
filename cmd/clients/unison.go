@@ -80,8 +80,13 @@ func StartUnisonInstance(serviceName string, config tools.OsmosisServiceConfig, 
         return nil, fmt.Errorf("The two directories were synced, but the unison process failed to start, with the following error:\n  %s", err)
     }
 
-    // Make directory /tmp/osmosis
-    ioutil.WriteFile("/tmp/osmosis/"+serviceName+".pid", []byte(fmt.Sprintf("%d", watcherUnisonCmd.Process.Pid)), 0664)
+    if err = os.MkdirAll("/tmp/osmosis", 0755); err != nil {
+        return nil, errors.New("Could not create /tmp/osmosis directory");
+    }
+    err = ioutil.WriteFile("/tmp/osmosis/"+serviceName+".pid", []byte(fmt.Sprintf("%d", watcherUnisonCmd.Process.Pid)), 0664)
+    if err != nil {
+        return nil, fmt.Errorf("Could not create pid file for %s", serviceName)
+    }
 
     instance.Pid = watcherUnisonCmd.Process.Pid
     instance.Running = true
@@ -95,6 +100,29 @@ func StartUnisonInstance(serviceName string, config tools.OsmosisServiceConfig, 
 
 
 func StopUnisonInstance(serviceName string) (err error) {
+    pidFile := "/tmp/osmosis/"+serviceName+".pid"
+    if _, err := os.Stat(pidFile); err != nil {
+        if os.IsNotExist(err) {
+            return nil
+        }
+        return fmt.Errorf("Could not process pid file %s", pidFile)
+    }
+
+    pidData, err := ioutil.ReadFile(pidFile);
+    if err != nil {
+        return fmt.Errorf("Could not process pid file %s", pidFile)
+    }
+
+    pid, err := strconv.Atoi(string(pidData))
+    if err != nil {
+        return errors.New("Could not read pid of unison process")
+    }
+
+    process, _ := os.FindProcess(pid)
+
+    process.Signal(syscall.SIGTERM)
+    os.Remove(pidFile)
+
     return nil
 }
 

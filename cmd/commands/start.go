@@ -11,12 +11,16 @@ func Start(serviceName string, config tools.OsmosisServiceConfig, verbose bool) 
         return err
     }
 
+    if err := clients.DockerVolumeCreate(serviceName, verbose); err != nil {
+        return err
+    }
+
     dockerInstance, err := clients.DockerContainerStart(serviceName, config, verbose)
     if err != nil {
         return err
     }
-    _, err = clients.StartUnisonInstance(serviceName, config, dockerInstance.Port, verbose)
-    if err != nil {
+
+    if _, err = clients.StartUnisonInstance(serviceName, config, dockerInstance.Port, verbose); err != nil {
         return err
     }
 
