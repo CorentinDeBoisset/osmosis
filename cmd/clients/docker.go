@@ -11,6 +11,7 @@ import (
     "github.com/docker/docker/api/types/container"
     "github.com/docker/docker/api/types/network"
     "github.com/docker/docker/api/types/volume"
+    "github.com/docker/docker/api/types/mount"
     "github.com/docker/docker/api/types/filters"
 )
 
@@ -149,16 +150,16 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
     containerConfig := container.Config{
         Image: config.Image,
         Hostname: serviceName,
-        Volumes: map[string]struct{}{
-            serviceName: struct{}{},
-        },
         Env: []string{
             fmt.Sprintf("OWNER_UID=%s", config.UserId),
             fmt.Sprintf("OWNER_GID=%s", config.GroupId),
             fmt.Sprintf("IGNORED_DIRS=%s", strings.Join(config.Excludes, ":")),
         },
     }
-    hostConfig := container.HostConfig{PublishAllPorts: true}
+    hostConfig := container.HostConfig{
+        PublishAllPorts: true,
+        Mounts: []mount.Mount{{ Type: "volume", Source: serviceName, Target: "/sync" }},
+    }
     networkConfig := network.NetworkingConfig{}
     createdContainer, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, &networkConfig, serviceName)
     if err != nil {
