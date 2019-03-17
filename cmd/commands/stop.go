@@ -1,7 +1,5 @@
 package commands
 
-// import "fmt"
-
 import (
     "team-git.sancare.fr/dev/osmosis/cmd/clients"
 )

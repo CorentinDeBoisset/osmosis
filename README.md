@@ -21,6 +21,3 @@ Package to keep folders synchronised between a docker container and its host.
 * Restart command:
     * stop command
     * start command
-* Clean command:
-    * stop command
-    * remove volume

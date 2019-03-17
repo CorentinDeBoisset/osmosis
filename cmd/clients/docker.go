@@ -155,7 +155,7 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
     }
     hostConfig := container.HostConfig{
         PublishAllPorts: true,
-        Mounts: []mount.Mount{{ Type: "volume", Source: serviceName, Target: "/sync" }},
+        Mounts: []mount.Mount{{ Type: "volume", Source: config.VolumeName, Target: "/sync" }},
     }
     networkConfig := network.NetworkingConfig{}
     createdContainer, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, &networkConfig, serviceName)
@@ -212,9 +212,22 @@ func DockerContainerStop(serviceName string, verbose bool) (err error) {
     return nil
 }
 
-func DockerContainerRemove() (err error) {
+func DockerContainerRemove(serviceName string, verbose bool) (err error) {
     if cli == nil {
         return errors.New("Docker client is not initialized.")
+    }
+
+    instance, err := GetDockerInstance(serviceName, verbose)
+    if err != nil {
+        return err
+    }
+    if instance == nil {
+        return nil
+    }
+
+    err = cli.ContainerRemove(context.Background(), instance.Id, types.ContainerRemoveOptions{})
+    if err != nil {
+        return fmt.Errorf("Container %s could not be removed", instance.Id)
     }
 
     return nil

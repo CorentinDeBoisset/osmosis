@@ -82,7 +82,16 @@ func main() {
             }
             // err = commands.Start(projectName, verbose)
         case "clean":
-            err = commands.Clean(projectName, verbose)
+            for serviceName, serviceConfig := range osmosisConf.Syncs {
+                fullName := projectName+"_"+serviceName
+                fmt.Printf("Cleaning service %s...", serviceName)
+                err = commands.Clean(fullName, serviceConfig, verbose)
+                if err != nil {
+                    fmt.Printf("\nError: %s\n\n", err)
+                    os.Exit(1)
+                }
+                fmt.Println("Done")
+            }
         case "help":
             commands.Help()
         default:
