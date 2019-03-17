@@ -74,13 +74,6 @@ func main() {
             }
         case "status":
             err = commands.Status(projectName, osmosisConf, verbose)
-        case "restart":
-            err = commands.Stop(projectName, verbose)
-            if err != nil {
-                fmt.Printf("Error: %s\n\n", err);
-                os.Exit(1)
-            }
-            // err = commands.Start(projectName, verbose)
         case "clean":
             for serviceName, serviceConfig := range osmosisConf.Syncs {
                 fullName := projectName+"_"+serviceName

@@ -7,7 +7,6 @@ func printCommandList() {
   start         Create and start sync services
   status        List sync services
   stop          Stop services
-  restart       Restart services
   clean         Remove all cache and volumes related to a service
   help          Get help about Osmosis
   version       Show the Osmosis version

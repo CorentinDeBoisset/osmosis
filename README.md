@@ -15,9 +15,3 @@ Package to keep folders synchronised between a docker container and its host.
 # Contributing
 
 //TODO
-
-# TODO:
-
-* Restart command:
-    * stop command
-    * start command
