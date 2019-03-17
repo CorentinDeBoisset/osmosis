@@ -18,6 +18,7 @@ type OsmosisServiceConfig struct {
     UserId string       `yaml:"user_id"`
     GroupId string      `yaml:"group_id"`
     Image string        `yaml:"image"`
+    VolumeName string   `yaml:"volume_name"`
 }
 
 type OsmosisFullConfig struct {
@@ -51,6 +52,9 @@ func (c *OsmosisFullConfig) ParseConfig(configPath string) (err error) {
         }
         if serviceConf.Src == "" {
             serviceConf.Src = "."
+        }
+        if serviceConf.VolumeName == "" {
+            serviceConf.VolumeName = serviceName
         }
 
         if serviceConf.UserId == "" {

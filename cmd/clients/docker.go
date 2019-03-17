@@ -144,9 +144,6 @@ func DockerContainerStart(serviceName string, config tools.OsmosisServiceConfig,
         return instance, nil
     }
 
-    // The container does not exist, we create and start it
-    // TODO setup environment
-
     containerConfig := container.Config{
         Image: config.Image,
         Hostname: serviceName,
@@ -223,13 +220,13 @@ func DockerContainerRemove() (err error) {
     return nil
 }
 
-func DockerVolumeCreate(serviceName string, verbose bool) (err error) {
+func DockerVolumeCreate(volumeName string, verbose bool) (err error) {
     if cli == nil {
         return errors.New("Docker client is not initialized.")
     }
 
     // First, check if the volume already exists
-    volumeExists, err := DockerVolumeStatus(serviceName, verbose)
+    volumeExists, err := DockerVolumeStatus(volumeName, verbose)
     if err != nil {
         return err
     }
@@ -242,29 +239,29 @@ func DockerVolumeCreate(serviceName string, verbose bool) (err error) {
         Driver: "local",
         DriverOpts: nil,
         Labels: nil,
-        Name: serviceName,
+        Name: volumeName,
     }
 
     if _, err = cli.VolumeCreate(context.Background(), body); err != nil {
-        return fmt.Errorf("Could not create volume %s.", serviceName)
+        return fmt.Errorf("Could not create volume %s.", volumeName)
     }
 
     return nil
 }
 
-func DockerVolumeRemove(serviceName string, verbose bool) (err error) {
+func DockerVolumeRemove(volumeName string, verbose bool) (err error) {
     if cli == nil {
         return errors.New("Docker client is not initialized.")
     }
 
     // First, check if the volume already exists
-    volumeExists, err := DockerVolumeStatus(serviceName, verbose)
+    volumeExists, err := DockerVolumeStatus(volumeName, verbose)
     if err != nil {
         return err
     }
     if volumeExists {
-        if err = cli.VolumeRemove(context.Background(), serviceName, false); err != nil {
-            return fmt.Errorf("Could not remove docker volume %s.", serviceName)
+        if err = cli.VolumeRemove(context.Background(), volumeName, false); err != nil {
+            return fmt.Errorf("Could not remove docker volume %s.", volumeName)
         }
         return nil
     }
@@ -272,7 +269,7 @@ func DockerVolumeRemove(serviceName string, verbose bool) (err error) {
     return nil
 }
 
-func DockerVolumeStatus(serviceName string, verbose bool) (volumeExists bool, err error) {
+func DockerVolumeStatus(volumeName string, verbose bool) (volumeExists bool, err error) {
     if cli == nil {
         return false, errors.New("Docker client is not initialized.")
     }
@@ -283,7 +280,7 @@ func DockerVolumeStatus(serviceName string, verbose bool) (volumeExists bool, er
     }
 
     for _, volumeInstance := range volumeList.Volumes {
-        if volumeInstance.Name == serviceName {
+        if volumeInstance.Name == volumeName {
             return true, nil
         }
     }

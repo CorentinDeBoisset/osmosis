@@ -11,7 +11,7 @@ func Start(serviceName string, config tools.OsmosisServiceConfig, verbose bool) 
         return err
     }
 
-    if err := clients.DockerVolumeCreate(serviceName, verbose); err != nil {
+    if err := clients.DockerVolumeCreate(config.VolumeName, verbose); err != nil {
         return err
     }
 

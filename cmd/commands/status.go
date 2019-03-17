@@ -28,7 +28,9 @@ func Status(projectName string, config tools.OsmosisFullConfig, verbose bool) (e
             return err
         }
         unisonProcess := clients.GetUnisonInstance(serviceName)
-        if dockerInstance.Status == "running" {
+        if dockerInstance == nil {
+            fmt.Fprintln(writer, serviceName+"\t"+"uninitialized")
+        } else if dockerInstance.Status == "running" {
             if unisonProcess.Pid != -1 {
                 if unisonProcess.Running {
                     fmt.Fprintln(writer, serviceName+"\t"+"running")
