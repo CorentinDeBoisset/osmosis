@@ -10,7 +10,15 @@ Package to keep folders synchronised between a docker container and its host.
 
 # Installation steps
 
-//TODO
+Install the dependencies with:
+
+    make get
+
+Then build the binary with:
+
+    make
+
+// TODO add installation
 
 # Contributing
 
