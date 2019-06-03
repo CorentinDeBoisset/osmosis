@@ -1,8 +1,8 @@
 package commands
 
 import (
-    "team-git.sancare.fr/dev/osmosis/cmd/tools"
-    "team-git.sancare.fr/dev/osmosis/cmd/clients"
+    "github.com/coreoas/osmosis/cmd/tools"
+    "github.com/coreoas/osmosis/cmd/clients"
 )
 
 func Start(serviceName string, config tools.OsmosisServiceConfig, verbose bool) (err error) {

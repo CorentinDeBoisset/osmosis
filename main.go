@@ -8,8 +8,8 @@ import (
 )
 
 import (
-    "team-git.sancare.fr/dev/osmosis/cmd/commands"
-    "team-git.sancare.fr/dev/osmosis/cmd/tools"
+    "github.com/coreoas/osmosis/cmd/commands"
+    "github.com/coreoas/osmosis/cmd/tools"
 )
 
 

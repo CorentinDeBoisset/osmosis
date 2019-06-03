@@ -11,7 +11,7 @@ import (
     "strings"
 )
 
-import "team-git.sancare.fr/dev/osmosis/cmd/tools"
+import "github.com/coreoas/osmosis/cmd/tools"
 
 
 type OsmosisUnisonInstance struct {

@@ -8,7 +8,7 @@ GOGET = $(GOCMD) get
 BIN_DIR = bin
 BINARY_NAME = osmosis
 
-.PHONY: all deps test clean
+.PHONY: all test clean get upgrade
 
 all: $(BIN_DIR)/$(BINARY_NAME)
 

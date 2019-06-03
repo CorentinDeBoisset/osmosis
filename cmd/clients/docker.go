@@ -15,7 +15,7 @@ import (
     "github.com/docker/docker/api/types/filters"
 )
 
-import "team-git.sancare.fr/dev/osmosis/cmd/tools"
+import "github.com/coreoas/osmosis/cmd/tools"
 
 
 type OsmosisDockerInstance struct {

@@ -1,7 +1,7 @@
 package commands
 
 import (
-    "team-git.sancare.fr/dev/osmosis/cmd/clients"
+    "github.com/coreoas/osmosis/cmd/clients"
 )
 
 func Stop(projectName string, verbose bool) (err error) {
