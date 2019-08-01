@@ -68,7 +68,7 @@ func StartUnisonInstance(serviceName string, config tools.OsmosisServiceConfig, 
         // We are in an inconsistent state,
         // the unison archives must be rebuilt to make unison ok
         initUnisonCmd = buildUnisonCommand(config, listenPort)
-        initUnisonCmd.Args = append(initUnisonCmd.Args, "-ignorearchives")
+        initUnisonCmd.Args = append(initUnisonCmd.Args, "-ignorearchives", "-halfduplex")
         if err = initUnisonCmd.Run(); err != nil {
             return nil, errors.New("An error occured trying syncing the two directories")
         }
