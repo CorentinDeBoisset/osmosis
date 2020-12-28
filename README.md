@@ -7,6 +7,7 @@ Package to keep folders synchronised between a docker container and its host.
 
 * [docker](https://docs.docker.com/install/overview/) v18.06+
 * [unison](https://www.cis.upenn.edu/~bcpierce/unison/download.html) v2.51+
+* [golang](https://golang.org/dl/) v1.11+
 
 # Installation steps
 
