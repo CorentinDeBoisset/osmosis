@@ -3,7 +3,7 @@ package commands
 import "fmt"
 
 func printCommandList() {
-    fmt.Printf(`Commands:
+	fmt.Printf(`Commands:
   start         Create and start sync services
   status        List sync services
   stop          Stop services
@@ -14,7 +14,7 @@ func printCommandList() {
 }
 
 func Help() {
-    fmt.Printf(`Define and manage file synchronisation services with docker containers.
+	fmt.Printf(`Define and manage file synchronisation services with docker containers.
 
 Usage:
   osmosis <command> [<args>]
@@ -27,10 +27,10 @@ Options:
   --verbose                 Show more output
 `)
 
-    printCommandList()
+	printCommandList()
 }
 
 func InvalidCommand(cmd string) {
-    fmt.Println("No such command:", cmd, "\n")
-    printCommandList()
+	fmt.Printf("No such command: %s\n", cmd)
+	printCommandList()
 }

@@ -10,13 +10,13 @@ Package to keep folders synchronised between a docker container and its host.
 
 # Installation steps
 
-Install the dependencies with:
-
-    make get
-
-Then build the binary with:
+Build the binary with:
 
     make
+
+Then, install it with:
+
+    make install
 
 # Contributing
 
